@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+    <h2>📝 {{ '記録の編集' if record else '新規記録の作成' }}</h2>
+
+    <form action="" method="post">
+        <label>タイトル</label>
+        <input type="text" name="title" value="{{ record.title if record else '' }}" placeholder="調査テーマ" required>
+
+        <label>本文 (Markdown形式)</label>
+        <p style="font-size: 0.8rem; color: var(--text-muted);">
+            # 見出し, ## 小見出し, - 箇条書き, [リンク](URL), **太字** などが使えます。
+        </p>
+        <textarea name="content" style="height: 500px; font-family: monospace; line-height: 1.6;"
+            placeholder="# 調査内容を記載してください...">{{ record.content if record else '' }}</textarea>
+
+        <div style="margin-top: 1.5rem;">
+            <button type="submit" class="btn">保存する</button>
+            <a href="{{ url_for('view_record', record_id=record.id) if record else url_for('record_list') }}"
+                style="margin-left: 15px; color: var(--text-muted); text-decoration: none;">キャンセル</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

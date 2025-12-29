@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h2 style="margin:0;">⚙️ Webサイト設定</h2>
+        <a href="/site/new" class="btn">＋ 新規サイト登録</a>
+    </div>
+
+    <div style="overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>サイト名</th>
+                    <th>ベースURL</th>
+                    <th style="width: 150px;">操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for site in sites %}
+                <tr>
+                    <td><strong style="color: var(--primary);">{{ site.name }}</strong></td>
+                    <td>
+                        {% if site.url %}
+                        <a href="{{ site.url }}" target="_blank"
+                            style="color: var(--text-muted); font-size: 0.85rem; text-decoration: none;">{{ site.url }}
+                            🔗</a>
+                        {% else %}-{% endif %}
+                    </td>
+                    <td>
+                        <div style="display: flex; gap: 10px;">
+                            <a href="/site/edit/{{ site.id }}" class="btn-edit-small">編集</a>
+                            <form action="/site/delete/{{ site.id }}" method="post"
+                                onsubmit="return confirm('このサイトを削除しますか？（登録済みのログの表示に影響が出る場合があります）');" style="margin:0;">
+                                <button type="submit" class="btn-delete-small">削除</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="3" style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                        登録されているサイトはありません。</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th {
+        background: #f8fafc;
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        padding: 1rem;
+        text-align: left;
+        border-bottom: 2px solid var(--border);
+    }
+
+    td {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border);
+        vertical-align: middle;
+    }
+
+    .btn-edit-small {
+        font-size: 0.75rem;
+        padding: 0.4rem 0.8rem;
+        border: 1px solid var(--primary);
+        color: var(--primary);
+        text-decoration: none;
+        border-radius: 4px;
+        font-weight: 600;
+    }
+
+    .btn-delete-small {
+        background: none;
+        border: 1px solid #fecaca;
+        color: #ef4444;
+        font-size: 0.75rem;
+        padding: 0.4rem 0.8rem;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}

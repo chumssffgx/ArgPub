@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+    <h2>💡 気になるワード（メモ）</h2>
+    <p style="color: var(--text-muted);">検索する前の「種」を保存しておけます。</p>
+
+    <form action="/memo/add" method="post"
+        style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 2rem; background: #f1f5f9; padding: 1.5rem; border-radius: 8px;">
+        <div style="display: flex; gap: 10px;">
+            <select name="site_id" required style="flex: 1; margin: 0;">
+                <option value="">-- 調査予定のサイト --</option>
+                {% for site in sites %}
+                <option value="{{ site.id }}">{{ site.name }}</option>
+                {% endfor %}
+            </select>
+            <input type="text" name="word" placeholder="気になるワード" required style="flex: 2; margin: 0;">
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <input type="text" name="description" placeholder="説明・理由" style="flex: 1; margin: 0;">
+            <button type="submit" class="btn"
+                style="margin: 0; white-space: nowrap; padding: 0.75rem 2rem;">メモを保存</button>
+        </div>
+    </form>
+
+    <style>
+        .memo-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.2rem 1rem;
+            border-bottom: 1px solid var(--border);
+            transition: background 0.2s;
+        }
+
+        .memo-item:hover {
+            background: #f8fafc;
+        }
+
+        .memo-content {
+            flex: 1;
+        }
+
+        .memo-word-area {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 5px;
+        }
+
+        .memo-word {
+            font-weight: bold;
+            color: var(--primary);
+            font-size: 1.1rem;
+        }
+
+        .tag-site {
+            background: #e0e7ff;
+            color: #4338ca;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        .memo-desc {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .memo-actions {
+            display: flex;
+            gap: 10px;
+            margin-left: 20px;
+        }
+
+        .btn-promote {
+            background: #10b981;
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .btn-del {
+            background: none;
+            border: 1px solid #ef4444;
+            color: #ef4444;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+    </style>
+
+    <div class="memo-container">
+        {% for memo in memos %}
+        <div class="memo-item">
+            <div class="memo-content">
+                <div class="memo-word-area">
+                    <span class="tag-site">{{ memo.site_name }}</span>
+                    <span class="memo-word">{{ memo.word }}</span>
+                </div>
+                <div class="memo-desc">{{ memo.description if memo.description else '説明なし' }}</div>
+            </div>
+
+            <div class="memo-actions">
+                <a href="/memo/convert/{{ memo.id }}" class="btn-promote">🔍 検索ログに追加</a>
+
+                <form action="/memo/delete/{{ memo.id }}" method="post" onsubmit="return confirm('このメモを削除しますか？');">
+                    <button type="submit" class="btn-del">削除</button>
+                </form>
+            </div>
+        </div>
+        {% else %}
+        <p style="text-align: center; color: var(--text-muted); padding: 3rem;">
+            まだメモはありません。上のフォームから追加してください。
+        </p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

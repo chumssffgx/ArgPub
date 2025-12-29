@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card" style="max-width: 500px; margin: 0 auto;">
+    <h2>✏️ サイト情報を編集</h2>
+    <form action="/site/edit/{{ site.id }}" method="post">
+        <label>サイト名</label>
+        <input type="text" name="name" value="{{ site.name }}" required placeholder="例: Google, Zenn, Qiita">
+
+        <label>ベースURL (任意)</label>
+        <input type="url" name="url" value="{{ site.url }}" placeholder="https://...">
+
+        <div style="margin-top: 2rem; display: flex; gap: 10px;">
+            <button type="submit" class="btn">更新する</button>
+            <a href="/sites" class="btn" style="background: #94a3b8;">キャンセル</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

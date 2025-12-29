@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h2>📝 調査記録</h2>
+        <a href="/record/new" class="btn">＋ 新規記録を作成</a>
+    </div>
+    <div style="display: grid; gap: 15px;">
+        {% for record in records %}
+        <div
+            style="padding: 1.5rem; border: 1px solid var(--border); border-radius: 12px; display: flex; justify-content: space-between; align-items: center;">
+            <a href="/record/{{ record.id }}"
+                style="text-decoration: none; color: var(--text-main); font-weight: 600; font-size: 1.1rem;">
+                {{ record.title }}
+            </a>
+            <form action="/record/delete/{{ record.id }}" method="post" onsubmit="return confirm('削除しますか？');">
+                <button type="submit"
+                    style="background: none; border: none; color: #ef4444; cursor: pointer;">削除</button>
+            </form>
+        </div>
+        {% else %}
+        <p style="text-align: center; color: var(--text-muted);">まだ記録がありません。</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

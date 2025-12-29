@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card" style="max-width: 600px; margin: auto;">
+    <h2>🌐 サイト設定</h2>
+    <form action="/site/new" method="post">
+        <label>サイト名</label>
+        <input type="text" name="name" required placeholder="調査対象のサイト名を入力">
+        <label>サイトURL (任意)</label>
+        <input type="url" name="url" placeholder="https://...">
+        <button type="submit" class="btn">登録する</button>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,281 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+    {# ヘッダーエリア #}
+    <div
+        style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 2rem;">
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <h2 style="margin:0;">🔍 検索ログ一覧</h2>
+            <div style="display: flex; gap: 5px;">
+                <button onclick="toggleAllDetails(true)" class="btn-outline-small">📂 すべて開く</button>
+                <button onclick="toggleAllDetails(false)" class="btn-outline-small">📁 すべて閉じる</button>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <a href="/sites"
+                style="text-decoration: none; font-size: 0.9rem; color: var(--primary); font-weight: 600;">⚙️ サイト管理</a>
+            <form action="/" method="get" style="margin: 0;">
+                <select name="site_id" onchange="this.form.submit()" style="width: auto; margin: 0; padding: 0.4rem;">
+                    <option value="">全てのサイト（フルツリー）</option>
+                    {% for site in sites %}
+                    <option value="{{ site.id }}" {% if site.id|string==target_site_id|string %}selected{% endif %}>{{
+                        site.name }}</option>
+                    {% endfor %}
+                </select>
+            </form>
+        </div>
+    </div>
+
+    {# 削除操作エリア（復活！） #}
+    <div
+        style="display: flex; gap: 10px; margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px dashed var(--border); flex-wrap: wrap;">
+        <form action="/log/delete_all" method="post" onsubmit="return confirm('全データを完全に消去しますか？');">
+            <button type="submit"
+                style="background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; font-size: 0.8rem; font-weight: 600;">🗑️
+                一括削除</button>
+        </form>
+
+        {# サイト絞り込み時のみ表示される削除ボタン #}
+        {% if target_site_id %}
+        <form action="/log/delete_by_site/{{ target_site_id }}" method="post"
+            onsubmit="return confirm('このサイトのログをすべて消去しますか？');">
+            <button type="submit"
+                style="background: #ffedd5; color: #d97706; border: 1px solid #fed7aa; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; font-size: 0.8rem; font-weight: 600;">🧹
+                サイト内ログ削除</button>
+        </form>
+        {% endif %}
+    </div>
+
+    {# --- ツリー表示用マクロ --- #}
+    {% macro render_log(log, level=0) %}
+    <div class="log-node" id="node-{{ log.id }}">
+        <details>
+            <summary style="list-style: none; outline: none;">
+                <div class="card log-card" id="card-{{ log.id }}" draggable="true"
+                    ondragstart="handleDragStart(event, '{{ log.id }}')" ondragover="handleDragOver(event)"
+                    ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, '{{ log.id }}')">
+
+                    <div class="log-content-header">
+                        <span class="folder-icon">{% if log.children %}▶{% else %}●{% endif %}</span>
+                        <span class="tag-site">{{ log.site_name }}</span>
+                        <strong class="log-word-text">{{ log.word }}</strong>
+                    </div>
+
+                    <div class="actions" draggable="false">
+                        <a href="/log/new?parent_id={{ log.id }}&initial_site_id={{ log.site_id }}"
+                            class="action-plus">⊕</a>
+                        <a href="/log/edit/{{ log.id }}" class="action-edit">編集</a>
+                        <form action="/log/delete/{{ log.id }}" method="post" onsubmit="return confirm('削除しますか？');"
+                            style="display:inline;">
+                            <button type="submit" class="btn-delete-link">削除</button>
+                        </form>
+                    </div>
+                </div>
+            </summary>
+
+            <div class="log-details-content">
+                {% if log.result %}<div class="result-preview">{{ log.result }}</div>{% endif %}
+                {% if log.children %}
+                {% for child in log.children %}
+                {{ render_log(child, level + 1) }}
+                {% endfor %}
+                {% endif %}
+            </div>
+        </details>
+    </div>
+    {% endmacro %}
+
+    {# メイン表示エリア #}
+    <div class="tree-container">
+        {% if target_site_id %}
+        <div
+            style="margin-bottom: 1rem; padding: 0.5rem 1rem; background: #f0f7ff; border-radius: 6px; border: 1px solid #cfe2ff; font-size: 0.85rem; color: #084298;">
+            📍 絞り込み中 <a href="/" style="margin-left: 10px; color: #084298; text-decoration: underline;">解除</a>
+        </div>
+        {% endif %}
+
+        <div id="log-tree-root">
+            {% for log in logs %}
+            {{ render_log(log) }}
+            {% else %}
+            <div style="text-align: center; padding: 5rem; color: var(--text-muted);">
+                <p>ログが見つかりませんでした。</p>
+                <a href="/log/new" class="btn">登録する</a>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="root-drop-zone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)"
+            ondrop="handleDrop(event, '')">
+            📥 ここにドロップして最上位階層（ルート）へ移動
+        </div>
+    </div>
+</div>
+
+<script>
+    let draggedId = null;
+
+    // 開閉状態の保存
+    function saveExpansionState() {
+        const openNodes = [];
+        document.querySelectorAll('#log-tree-root details[open]').forEach(details => {
+            const node = details.closest('.log-node');
+            if (node) openNodes.push(node.id);
+        });
+        localStorage.setItem('logTreeOpenNodes', JSON.stringify(openNodes));
+    }
+
+    // 開閉状態の復元
+    function restoreExpansionState() {
+        const openNodes = JSON.parse(localStorage.getItem('logTreeOpenNodes') || '[]');
+        openNodes.forEach(nodeId => {
+            const node = document.getElementById(nodeId);
+            if (node) {
+                const details = node.querySelector('details');
+                if (details) details.open = true;
+            }
+        });
+    }
+
+    // 一括開閉
+    function toggleAllDetails(isOpen) {
+        document.querySelectorAll('#log-tree-root details').forEach(d => d.open = isOpen);
+        saveExpansionState();
+    }
+
+    // ドラッグ＆ドロップロジック
+    function handleDragStart(e, id) {
+        draggedId = id;
+        e.dataTransfer.effectAllowed = "move";
+        e.currentTarget.classList.add('dragging');
+    }
+
+    function handleDragOver(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.currentTarget.classList.add('drop-target-active');
+    }
+
+    function handleDragLeave(e) {
+        e.currentTarget.classList.remove('drop-target-active');
+    }
+
+    async function handleDrop(e, targetId) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.currentTarget.classList.remove('drop-target-active');
+
+        if (!draggedId || draggedId === targetId) return;
+
+        saveExpansionState(); // 移動前に今の開閉状態を記憶
+
+        const response = await fetch('/api/log/move', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ log_id: draggedId, target_id: targetId })
+        });
+
+        if (response.ok) {
+            window.location.reload();
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', restoreExpansionState);
+</script>
+
+<style>
+    .dragging {
+        opacity: 0.4;
+        border: 2px dashed var(--primary) !important;
+    }
+
+    .drop-target-active {
+        background: #eef2ff !important;
+        border: 2px solid var(--primary) !important;
+        transform: scale(1.02);
+    }
+
+    .log-card {
+        cursor: grab;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 15px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: white;
+        margin-bottom: 4px;
+        transition: all 0.2s;
+    }
+
+    .log-node {
+        margin-left: 20px;
+        border-left: 1px solid #e2e8f0;
+    }
+
+    #log-tree-root>.log-node {
+        margin-left: 0;
+        border-left: none;
+    }
+
+    .root-drop-zone {
+        margin-top: 2rem;
+        padding: 1.5rem;
+        border: 2px dashed #cbd5e1;
+        border-radius: 12px;
+        text-align: center;
+        color: #94a3b8;
+        transition: all 0.2s;
+    }
+
+    .root-drop-zone.drop-target-active {
+        background: #f1f5f9;
+        color: var(--primary);
+    }
+
+    .folder-icon {
+        display: inline-block;
+        width: 1.2rem;
+        transition: transform 0.2s;
+    }
+
+    details[open]>summary .folder-icon {
+        transform: rotate(90deg);
+        color: var(--primary);
+    }
+
+    .btn-outline-small {
+        background: white;
+        border: 1px solid #cbd5e1;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        cursor: pointer;
+    }
+
+    .log-details-content {
+        padding-left: 20px;
+    }
+
+    .result-preview {
+        font-size: 0.85rem;
+        color: #64748b;
+        background: #f8fafc;
+        padding: 8px;
+        border-radius: 4px;
+        border: 1px dashed #e2e8f0;
+        margin: 5px 0;
+    }
+
+    .btn-delete-link {
+        background: none;
+        border: none;
+        color: #ef4444;
+        cursor: pointer;
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0;
+    }
+</style>
+{% endblock %}

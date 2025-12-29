@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card" style="max-width: 600px; margin: 0 auto;">
+    <h2>✏️ ログを編集</h2>
+    <form action="/log/edit/{{ log.id }}" method="post">
+        <input type="hidden" name="next_url" value="{{ next_url }}">
+
+        <label>使用サイト</label>
+        <input type="text" value="{{ site_name }}" disabled style="background: #f1f5f9;">
+
+        <label>検索ワード</label>
+        <input type="text" name="word" value="{{ log.word }}" required>
+
+        <label>参照URL</label>
+        <input type="url" name="url" value="{{ log.url }}">
+
+        <label>結果と考察</label>
+        <textarea name="result" rows="8">{{ log.result }}</textarea>
+
+        <div style="margin-top: 2rem;">
+            <button type="submit" class="btn">更新する</button>
+            <a href="{{ next_url if next_url and next_url != 'None' else '/' }}" class="btn"
+                style="background: #94a3b8; margin-left: 10px;">キャンセル</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

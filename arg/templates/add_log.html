@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card" style="max-width: 600px; margin: 0 auto;">
+    <h2>➕ 検索ログを登録</h2>
+    <form action="/log/new" method="post">
+        <input type="hidden" name="parent_id" value="{{ parent_id }}">
+        <input type="hidden" name="next_url" value="{{ next_url }}">
+
+        <label>使用サイト</label>
+        <select name="site_id" required>
+            {% for site in sites %}
+            <option value="{{ site.id }}" {% if site.id==initial_site_id %}selected{% endif %}>{{ site.name }}</option>
+            {% endfor %}
+        </select>
+
+        <label>検索ワード</label>
+        <input type="text" name="word" value="{{ initial_word }}" required placeholder="例: Python Flask 使い方">
+
+        <label>参照URL (任意)</label>
+        <input type="url" name="url" placeholder="https://...">
+
+        <label>結果と考察</label>
+        <textarea name="result" rows="5" placeholder="わかったことや次のアクション">{{ initial_result }}</textarea>
+
+        <div style="margin-top: 2rem;">
+            <button type="submit" class="btn">保存する</button>
+            <a href="{{ next_url if next_url and next_url != 'None' else '/' }}" class="btn"
+                style="background: #94a3b8; margin-left: 10px;">キャンセル</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

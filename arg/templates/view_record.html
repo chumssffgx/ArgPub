@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <a href="/records" style="color: var(--text-muted); text-decoration: none; font-size: 0.9rem;">← 調査記録一覧に戻る</a>
+        <a href="/record/edit/{{ record.id }}" class="btn" style="background: #6366f1; font-size: 0.8rem;">✏️
+            この記事を編集</a>
+    </div>
+
+    <h1 style="margin-top: 1.5rem; border-bottom: 2px solid var(--primary); padding-bottom: 0.5rem;">{{ record.title }}
+    </h1>
+
+    <div class="markdown-body" style="line-height: 1.8; margin-top: 2rem;">
+        {{ record.html_content | safe }}
+    </div>
+</div>
+
+<style>
+    .markdown-body h1,
+    .markdown-body h2 {
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 0.3rem;
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+    }
+
+    .markdown-body p {
+        margin-bottom: 1rem;
+    }
+
+    .markdown-body ul,
+    .markdown-body ol {
+        margin-bottom: 1rem;
+        padding-left: 2rem;
+    }
+
+    .markdown-body blockquote {
+        border-left: 4px solid #cbd5e1;
+        padding-left: 1rem;
+        color: #64748b;
+        font-style: italic;
+        margin: 1rem 0;
+    }
+
+    .markdown-body pre {
+        background: #1e293b;
+        color: #f8fafc;
+        padding: 1rem;
+        border-radius: 8px;
+        overflow-x: auto;
+        margin: 1rem 0;
+    }
+</style>
+{% endblock %}
