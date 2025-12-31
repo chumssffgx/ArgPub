@@ -267,6 +267,44 @@ def view_record(record_id):
     if r: r['html_content'] = markdown.markdown(r['content'], extensions=['fenced_code', 'tables'])
     return render_template('view_record.html', record=r)
 
+@app.route('/api/search')
+def api_search():
+    query = request.args.get('q', '').lower()
+    if not query:
+        return jsonify({'logs': [], 'memos': []})
+
+    all_logs = read_csv(LOGS_CSV)
+    all_memos = read_csv(MEMOS_CSV)
+    sites = read_csv(SITES_CSV)
+    site_map = {s['id']: s['name'] for s in sites}
+
+    # ログの検索
+    matched_logs = []
+    for l in all_logs:
+        # 検索対象：単語、結果、備考1、備考2
+        search_text = f"{l.get('word','')} {l.get('result','')} {l.get('extra1','')} {l.get('extra2','')}".lower()
+        if query in search_text:
+            l['site_name'] = site_map.get(l['site_id'], '不明')
+            matched_logs.append(l)
+
+    # メモの検索
+    matched_memos = []
+    for m in all_memos:
+        # 検索対象：単語、詳細説明
+        search_text = f"{m.get('word','')} {m.get('description','')}".lower()
+        if query in search_text:
+            m['site_name'] = site_map.get(m['site_id'], '不明')
+            matched_memos.append(m)
+
+    return jsonify({
+        'logs': matched_logs,
+        'memos': matched_memos
+    })
+
+
+
+
+
 @app.route('/api/log/move', methods=['POST'])
 def move_log():
     data = request.json

@@ -140,6 +140,76 @@
                 justify-content: center;
             }
         }
+
+        /* =========================================
+           ここから追加：検索機能専用スタイル
+        ========================================= */
+        .search-wrapper {
+            flex: 1;
+            max-width: 400px;
+            margin: 0 1.5rem;
+        }
+
+        .search-bar {
+            width: 100%;
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--border);
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-top: 0;
+            /* 元のinputのmarginをリセット */
+        }
+
+        #search-overlay {
+            display: none;
+            position: fixed;
+            top: 70px;
+            left: 0;
+            width: 100%;
+            height: calc(100vh - 70px);
+            background: rgba(248, 250, 252, 0.98);
+            z-index: 999;
+            overflow-y: auto;
+            padding: 2rem;
+        }
+
+        .search-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .search-column {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .search-item {
+            padding: 1rem;
+            border-bottom: 1px solid var(--bg);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .search-item:hover {
+            background: var(--bg);
+        }
+
+        .search-item mark {
+            background: #fef08a;
+            padding: 0 2px;
+            font-weight: bold;
+        }
+
+        .search-item .meta {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
     </style>
 </head>
 
@@ -147,6 +217,11 @@
     <nav>
         <div class="nav-inner">
             <div style="font-weight: 800; color: var(--primary); font-size: 1.1rem;">🚀 Research Tracker</div>
+
+            <div class="search-wrapper">
+                <input type="text" id="dynamic-search" class="search-bar" placeholder="ログやメモを全件検索...">
+            </div>
+
             <div class="nav-links">
                 <a href="/">📋 ログ一覧</a>
                 <a href="/memos">💡 メモ</a>
@@ -156,9 +231,84 @@
             </div>
         </div>
     </nav>
+
+    <div id="search-overlay">
+        <div class="search-grid">
+            <div class="search-column">
+                <h3 style="color:var(--primary); margin-top:0;">📋 調査ログの結果</h3>
+                <div id="log-results"></div>
+            </div>
+            <div class="search-column">
+                <h3 style="color:var(--primary); margin-top:0;">💡 メモの結果</h3>
+                <div id="memo-results"></div>
+            </div>
+        </div>
+    </div>
+
     <div class="container">
         {% block content %}{% endblock %}
     </div>
+
+    <script>
+        const input = document.getElementById('dynamic-search');
+        const overlay = document.getElementById('search-overlay');
+        const logBox = document.getElementById('log-results');
+        const memoBox = document.getElementById('memo-results');
+
+        function highlight(text, q) {
+            if (!q) return text;
+            const regex = new RegExp(`(${q})`, 'gi');
+            return text.replace(regex, '<mark>$1</mark>');
+        }
+
+        input.addEventListener('input', async (e) => {
+            const q = e.target.value.trim();
+            if (!q) {
+                overlay.style.display = 'none';
+                return;
+            }
+
+            overlay.style.display = 'block';
+            const response = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+            const data = await response.json();
+
+            // ログの描画
+            logBox.innerHTML = data.logs.length ? '' : '該当なし';
+            data.logs.forEach(l => {
+                const item = document.createElement('div');
+                item.className = 'search-item';
+                item.innerHTML = `
+                    <div class="meta">${l.site_name}</div>
+                    <strong>${highlight(l.word, q)}</strong><br>
+                    <small>${highlight(l.result, q)}</small>
+                `;
+                item.onclick = () => location.href = `/log/edit/${l.id}`;
+                logBox.appendChild(item);
+            });
+
+            // メモの描画
+            memoBox.innerHTML = data.memos.length ? '' : '該当なし';
+            data.memos.forEach(m => {
+                const item = document.createElement('div');
+                item.className = 'search-item';
+                item.innerHTML = `
+                    <div class="meta">${m.site_name}</div>
+                    <strong>${highlight(m.word, q)}</strong><br>
+                    <small>${highlight(m.description, q)}</small>
+                `;
+                item.onclick = () => location.href = `/memos`;
+                memoBox.appendChild(item);
+            });
+        });
+
+        // Escキーで閉じる
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                input.value = '';
+                overlay.style.display = 'none';
+            }
+        });
+    </script>
 </body>
 
 </html>

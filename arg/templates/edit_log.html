@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="card" style="max-width: 600px; margin: 0 auto;">
-    <h2>✏️ ログを編集</h2>
+    <h2>✏️ ログを参照・編集</h2>
     <form action="/log/edit/{{ log.id }}" method="post">
         <input type="hidden" name="next_url" value="{{ next_url }}">
 
